@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/UW-Allen-School-Robotics/opendubs",
+  "source_commit": "4f53a3f58872211ce48120b1a1dc7e697a4dcba0",
+  "source_path": "description/opendubs",
+  "moved": "2026-11-25",
+  "note": "Moved, unchanged: this package is now the robot description's home. The meshes are the project's own CAD under CERN-OHL-W-2.0 (LICENSE-HARDWARE); dimensions.yaml's `meshes:` section records each one's provenance."
+}

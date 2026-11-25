@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "opendubs_assets"
+version = "0.1.0"
+description = "The OpenDubs robot's description, and the whole robot (with openarm_assets' arms) as one MuJoCo model gafro reads"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0 AND CERN-OHL-W-2.0 AND MIT"
+license-files = ["LICENSE-CODE", "LICENSE-HARDWARE", "src/opendubs_assets/models/openarm/LICENSE-*"]
+dependencies = [
+    "mujoco",
+    "pyyaml",
+    "openarm_assets @ git+https://github.com/personalrobotics/openarm_assets.git",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+opendubs_assets = [
+    "models/**/*.xml",
+    "models/**/*.urdf",
+    "models/**/*.yaml",
+    "models/**/*.py",
+    "models/**/*.stl",
+    "models/**/*.obj",
+    "models/**/*.json",
+    "models/**/LICENSE-*",
+    # gafro-robot-node configs of the robot, which a robot's config extends as opendubs_assets:configs/<file>.
+    "configs/*.yaml",
+]
+
+[project.urls]
+Homepage = "https://github.com/personalrobotics/opendubs_assets"
+Repository = "https://github.com/personalrobotics/opendubs_assets"
+
+[tool.ruff]
+line-length = 140
+
+[dependency-groups]
+dev = ["pytest", "ruff"]

@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 Tobias Loew <tobias.loew@gafro.ch>
+# SPDX-License-Identifier: Apache-2.0
+#
+# node.yaml with the hands: openarm_assets' node_hands.yaml (a posture stage per hand, track_right_hand / track_left_hand / track_all)
+# on the whole robot. Simulation only, until openarm-driver serves the hand (see openarm_assets' node_hands.yaml).
+#
+#   gafro-robot-node --config src/opendubs_assets/configs/node_hands.yaml --transport local --run-for 10
+extends: openarm_assets:configs/node_hands.yaml
+
+robot:
+  model: ../models/generated/opendubs_hands.xml

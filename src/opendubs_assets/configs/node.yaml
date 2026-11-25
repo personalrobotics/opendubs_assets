@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Tobias Loew <tobias.loew@gafro.ch>
+# SPDX-License-Identifier: Apache-2.0
+#
+# The OpenDubs robot as one gafro-robot-node: openarm_assets' arm config (follow_paths, track_right / track_left / track_both) on the
+# whole robot, so each arm's chain starts at the lift. In simulation; a robot's config extends this file
+# (`extends: opendubs_assets:configs/node.yaml`) with the hardware backend, its guard and its transport.
+#
+#   gafro-robot-node --config src/opendubs_assets/configs/node.yaml --transport local --run-for 10
+extends: openarm_assets:configs/node.yaml
+
+robot:
+  model: ../models/generated/opendubs.xml   # beside this file, in the checkout and in the installed package
