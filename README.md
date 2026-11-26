@@ -8,16 +8,15 @@ The OpenDubs robot: its description (the chassis, the Z-axis lift and the pan/ti
 |---|---|
 | `models/opendubs/` | The robot description: `opendubs.xml` (MJCF), its meshes, `dimensions.yaml` (where every number came from), `gen_urdf.py` and the URDFs it writes, `variants.py`. Moved, unchanged, from the OpenDubs repository (`PROVENANCE.json`). |
 | `models/openarm/meshes/` | The arms' meshes, as OpenDubs vendored them (collision unchanged, visual decimated; `PROVENANCE.json`, `MOVED.json`). |
-| `models/generated/opendubs.xml` | The whole robot, the model the robot runs on: the arms without the hands' control groups. |
-| `models/generated/opendubs_hands.xml` | The same with each hand a control group of its finger joints, for simulation. |
+| `models/generated/opendubs.xml` | The whole robot, the model the robot runs on and the one simulated: the arms, and each hand a control group of its finger joints. |
 | `configs/node.yaml`, `configs/node_hands.yaml` | [gafro-robot-node](https://github.com/personalrobotics/gafro-robot-node) configs of the whole robot: openarm_assets' arm configs with this model. A robot's config extends them as `opendubs_assets:configs/node.yaml`. |
 
 ## The whole robot
 
-`python -m opendubs_assets.assembly` writes both generated models (they are committed, so you do not need to run it to use them):
+`python -m opendubs_assets.assembly` writes the generated model (it is committed, so you do not need to run it to use it):
 
 - The arms are `openarm_assets.assembly.build_openarm`'s, as openarm-driver runs them: joint 2 capped for the head, the driver's velocity limit, and the gafro decorations (kinematic chains, task spaces, control groups, the collision cover).
-- They attach to the lift platform, so **each arm's kinematic chain starts at the lift** (`zaxis`): gafro's forward kinematics, reach and self-collision see the real height. The lift is in each arm's task space but not controlled; no control group commands the lift or the head yet, so on hardware only the arm drivers are needed. On hardware nothing reports the lift's height to gafro yet, so it reads 0 until a driver does.
+- They attach to the lift platform, so **each arm's kinematic chain starts at the lift** (`zaxis`): gafro's forward kinematics, reach and self-collision see the real height. The lift is in each arm's task space but not controlled; no control group commands the lift or the head yet, so on hardware only the arms' and the hands' drivers are needed (openarm-driver's `openarm` and `openarm_hand`). On hardware nothing reports the lift's height to gafro yet, so it reads 0 until a driver does.
 - gafro's model has a fixed root, so **the chassis is welded**: its freejoint, the wheels' and rollers' joints and the drive are left out. The wheels stay as geometry.
 - The element names are openarm_assets' (`openarm_right_joint1`, `right_arm`, `bimanual`, ...), so its node configs apply unchanged.
 

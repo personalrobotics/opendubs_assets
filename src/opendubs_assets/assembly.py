@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """The whole OpenDubs robot as one MuJoCo model gafro reads: our chassis, lift and head, with openarm_assets' arms on the lift.
 
-    python -m opendubs_assets.assembly             # write both generated models
+    python -m opendubs_assets.assembly             # write the generated model
 
 The arms are `openarm_assets.assembly.build_openarm`'s, as openarm-driver runs them (joint 2 capped for the head, the driver's velocity
 limit), with their gafro decorations: chains, task spaces, control groups and the collision cover. They attach to the lift platform,
@@ -12,11 +12,9 @@ commands the lift or the head yet, so hardware needs only the arm drivers.
 gafro's model has a fixed root, so the chassis is welded here: its freejoint, the wheels' and rollers' joints and the drive (its
 tendons and actuators) are left out. The wheels stay as geometry.
 
-Two models, beside each other in `models/generated/`:
-
-- `opendubs.xml`: the arms without the hands' control groups, the model the robot runs on (gafro-robot-interface's hardware backend
-  needs a driver for every group that commands joints, and openarm-driver does not serve the hand yet);
-- `opendubs_hands.xml`: with them, for simulation.
+It writes `models/generated/opendubs.xml`, the model the robot runs on and the one simulated: the arms and each hand as a control group of
+its finger joints. On hardware every group that commands joints needs a driver: openarm-driver's `openarm` for an arm, `openarm_hand` for
+a hand.
 """
 
 from __future__ import annotations
@@ -35,7 +33,7 @@ OPENDUBS_XML = MODELS_DIR / "opendubs" / "opendubs.xml"
 OPENDUBS_MESHES = MODELS_DIR / "opendubs" / "meshes"
 ARM_MESHES = MODELS_DIR / "openarm" / "meshes"
 GENERATED_DIR = MODELS_DIR / "generated"
-OUT_PATHS = {False: GENERATED_DIR / "opendubs.xml", True: GENERATED_DIR / "opendubs_hands.xml"}
+OUT_PATH = GENERATED_DIR / "opendubs.xml"
 
 # Where the arms' frame (openarm_body_link0's origin) sits on the lift platform, in the CAD frame. From opendubs' sim/scene.py.
 ARM_MOUNT_XYZ = (0.423, 0.0, 0.3575)
@@ -45,12 +43,12 @@ ARM_ROOT = "openarm_body_link0"
 KEPT_JOINTS = ("zaxis", "head_pan", "head_tilt")
 
 
-def build_opendubs(hands: bool = False) -> mujoco.MjSpec:
-    """The whole robot as an MjSpec: the chassis welded, the arms (with the hands' groups if @p hands) attached to the lift.
+def build_opendubs() -> mujoco.MjSpec:
+    """The whole robot as an MjSpec: the chassis welded, the arms and their hands attached to the lift.
 
     Mesh files are absolute paths into this package; `to_xml` writes them relative to `models/generated/`.
     """
-    arms = build_openarm(joint_ranges=head_cap_ranges(), velocity_limit=DRIVER_VELOCITY_LIMIT, hands=hands)
+    arms = build_openarm(joint_ranges=head_cap_ranges(), velocity_limit=DRIVER_VELOCITY_LIMIT)
     ours = mujoco.MjSpec.from_file(str(OPENDUBS_XML))
 
     # One model, two mesh folders: every mesh by its own path.
@@ -121,10 +119,9 @@ def to_xml(spec: mujoco.MjSpec) -> str:
 def main() -> None:
     argparse.ArgumentParser(description=__doc__.split("\n\n")[0]).parse_args()
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-    for hands, out in OUT_PATHS.items():
-        out.write_text(to_xml(build_opendubs(hands=hands)))
-        model = mujoco.MjModel.from_xml_path(str(out))
-        print(f"Wrote {out}: {model.nq} qpos, {model.nu} actuators")
+    OUT_PATH.write_text(to_xml(build_opendubs()))
+    model = mujoco.MjModel.from_xml_path(str(OUT_PATH))
+    print(f"Wrote {OUT_PATH}: {model.nq} qpos, {model.nu} actuators")
 
 
 if __name__ == "__main__":

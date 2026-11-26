@@ -8,7 +8,6 @@ __version__ = "0.1.0"
 MODELS_DIR = Path(__file__).parent / "models"
 
 
-def get_generated_model_path(hands: bool = False) -> Path:
-    """The whole robot, as `python -m opendubs_assets.assembly` writes it: with the hands' control groups (simulation) or without
-    (the model the robot runs on)."""
-    return MODELS_DIR / "generated" / ("opendubs_hands.xml" if hands else "opendubs.xml")
+def get_generated_model_path() -> Path:
+    """The whole robot, as `python -m opendubs_assets.assembly` writes it: the arms and each hand as a control group of its fingers."""
+    return MODELS_DIR / "generated" / "opendubs.xml"

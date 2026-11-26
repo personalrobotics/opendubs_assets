@@ -12,14 +12,12 @@ from opendubs_assets.assembly import build_opendubs, to_xml
 N_CONFIGS = 20
 
 
-@pytest.mark.parametrize("hands", [False, True])
-def test_the_committed_model_is_what_the_generator_builds(hands):
-    assert get_generated_model_path(hands).read_text() == to_xml(build_opendubs(hands=hands))
+def test_the_committed_model_is_what_the_generator_builds():
+    assert get_generated_model_path().read_text() == to_xml(build_opendubs())
 
 
-@pytest.mark.parametrize("hands", [False, True])
-def test_the_chassis_is_welded_and_the_lift_and_head_are_joints(hands):
-    model = mujoco.MjModel.from_xml_path(str(get_generated_model_path(hands)))
+def test_the_chassis_is_welded_and_the_lift_and_head_are_joints():
+    model = mujoco.MjModel.from_xml_path(str(get_generated_model_path()))
     joints = {model.joint(j).name for j in range(model.njnt)}
 
     assert {"zaxis", "head_pan", "head_tilt"} <= joints
@@ -31,14 +29,13 @@ def test_the_chassis_is_welded_and_the_lift_and_head_are_joints(hands):
 gafro = pytest.importorskip("gafro")
 
 
-@pytest.fixture(scope="module", params=[False, True], ids=["robot", "hands"])
-def pair(request):
-    path = str(get_generated_model_path(request.param))
+@pytest.fixture(scope="module")
+def pair():
+    path = str(get_generated_model_path())
     system = gafro.SystemSerialization.load(path)
     model = mujoco.MjModel.from_xml_path(path)
     joints = [mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, a.joint_name) for a in system.get_actuators()]
     return {
-        "hands": request.param,
         "system": system,
         "model": model,
         "qadr": np.array([model.jnt_qposadr[j] for j in joints]),
@@ -48,11 +45,9 @@ def pair(request):
 
 def test_groups_and_task_spaces(pair):
     system = pair["system"]
-    groups = ["left_arm", "left_hand", "right_arm", "right_hand"] if pair["hands"] else ["left_arm", "right_arm"]
-
-    # No group commands the lift or the head: hardware needs only the arm drivers.
-    assert [g.get_name() for g in system.get_control_groups()] == groups
-    assert {"left", "right", "bimanual"} <= set(system.get_task_space_names())
+    # No group commands the lift or the head: hardware needs only the arms' and the hands' drivers.
+    assert [g.get_name() for g in system.get_control_groups()] == ["left_arm", "left_hand", "right_arm", "right_hand"]
+    assert {"left", "right", "bimanual", "left_hand", "right_hand", "arms_and_hands"} <= set(system.get_task_space_names())
 
 
 @pytest.mark.parametrize("side", ["left", "right"])
