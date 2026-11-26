@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """The whole robot: what the generator builds is what is committed, and gafro reads it as MuJoCo does, the lift included."""
 
+from pathlib import Path
+
 import mujoco
 import numpy as np
 import pytest
@@ -94,3 +96,23 @@ def test_every_arm_joint_has_its_three_command_modes(pair):
         if "openarm_" in actuator.joint_name and "_joint" in actuator.joint_name and "finger" not in actuator.joint_name:
             for wanted in (mode.TORQUE, mode.VELOCITY, mode.POSITION):
                 actuator.get_mode_index(wanted)  # raises KeyError for a mode the actuator lacks
+
+
+def test_the_arms_meshes_are_openarm_assets_own():
+    """No mesh is copied: each is named below the packages' directory by its package, ours or openarm_assets', and is that file."""
+    import xml.etree.ElementTree as ET
+
+    import openarm_assets
+
+    import opendubs_assets
+
+    root = ET.parse(get_generated_model_path()).getroot()
+    packages = {"opendubs_assets": opendubs_assets.MODELS_DIR.parent, "openarm_assets": Path(openarm_assets.__file__).parent}
+    names = [mesh.get("file") for mesh in root.iter("mesh") if mesh.get("file")]
+
+    assert root.find("compiler").get("meshdir") == "../../.."
+    assert {name.split("/")[0] for name in names} == {"opendubs_assets", "openarm_assets"}
+    for name in names:
+        assert ".." not in name.split("/")
+        package, inside = name.split("/", 1)
+        assert (packages[package] / inside).is_file(), name

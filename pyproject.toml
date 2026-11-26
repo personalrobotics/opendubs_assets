@@ -8,8 +8,8 @@ version = "0.1.0"
 description = "The OpenDubs robot's description, and the whole robot (with openarm_assets' arms) as one MuJoCo model gafro reads"
 readme = "README.md"
 requires-python = ">=3.10"
-license = "Apache-2.0 AND CERN-OHL-W-2.0 AND MIT"
-license-files = ["LICENSE-CODE", "LICENSE-HARDWARE", "src/opendubs_assets/models/openarm/LICENSE-*"]
+license = "Apache-2.0 AND CERN-OHL-W-2.0"
+license-files = ["LICENSE-CODE", "LICENSE-HARDWARE"]
 dependencies = [
     "mujoco",
     "pyyaml",
@@ -26,9 +26,7 @@ opendubs_assets = [
     "models/**/*.yaml",
     "models/**/*.py",
     "models/**/*.stl",
-    "models/**/*.obj",
     "models/**/*.json",
-    "models/**/LICENSE-*",
     # gafro-robot-node configs of the robot, which a robot's config extends as opendubs_assets:configs/<file>.
     "configs/*.yaml",
 ]

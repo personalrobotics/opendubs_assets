@@ -1,7 +1,0 @@
-{
-  "source": "https://github.com/UW-Allen-School-Robotics/opendubs",
-  "source_commit": "4f53a3f58872211ce48120b1a1dc7e697a4dcba0",
-  "source_path": "description/openarm/meshes",
-  "moved": "2026-11-25",
-  "note": "The OpenArm meshes as opendubs vendored them (PROVENANCE.json beside this file: collision meshes unchanged, visual meshes decimated). The arms' model itself comes from openarm_assets' generator; only the mesh files are kept here, under the same names."
-}

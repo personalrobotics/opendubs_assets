@@ -25,13 +25,17 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import mujoco
+import openarm_assets
 from openarm_assets.assembly import DRIVER_VELOCITY_LIMIT, build_openarm, head_cap_ranges
 from openarm_assets.assembly import to_xml as openarm_xml
 
-MODELS_DIR = Path(__file__).parent / "models"
+PACKAGE_DIR = Path(__file__).parent
+MODELS_DIR = PACKAGE_DIR / "models"
 OPENDUBS_XML = MODELS_DIR / "opendubs" / "opendubs.xml"
 OPENDUBS_MESHES = MODELS_DIR / "opendubs" / "meshes"
-ARM_MESHES = MODELS_DIR / "openarm" / "meshes"
+# The arms' meshes are openarm_assets' own, read where that package is: this one carries no copy.
+OPENARM_PACKAGE_DIR = Path(openarm_assets.__file__).parent
+ARM_MESHES = OPENARM_PACKAGE_DIR / "models" / "openarm" / "meshes"
 GENERATED_DIR = MODELS_DIR / "generated"
 OUT_PATH = GENERATED_DIR / "opendubs.xml"
 
@@ -46,7 +50,8 @@ KEPT_JOINTS = ("zaxis", "head_pan", "head_tilt")
 def build_opendubs() -> mujoco.MjSpec:
     """The whole robot as an MjSpec: the chassis welded, the arms and their hands attached to the lift.
 
-    Mesh files are absolute paths into this package; `to_xml` writes them relative to `models/generated/`.
+    Mesh files are absolute paths, into this package (ours) and into openarm_assets (the arms'); `to_xml` names them below the directory
+    the two packages are installed in.
     """
     arms = build_openarm(joint_ranges=head_cap_ranges(), velocity_limit=DRIVER_VELOCITY_LIMIT)
     ours = mujoco.MjSpec.from_file(str(OPENDUBS_XML))
@@ -88,20 +93,23 @@ def _weld(spec: mujoco.MjSpec) -> None:
 
 def to_xml(spec: mujoco.MjSpec) -> str:
     """The spec as MJCF gafro reads, to be written in `models/generated/`: openarm_assets' text (the arm joints' actuators as the
-    shortcuts gafro takes modes from), the meshes named below `models/`, and the arms' attach frame folded into their root body.
+    shortcuts gafro takes modes from), the meshes named below the packages' directory, and the arms' attach frame folded into their root
+    body.
 
-    `meshdir` is `models/` and each mesh is named below it (`opendubs/meshes/...`, `openarm/meshes/...`): one directory holds both
-    mesh folders, and a name without `..` is what gafro-robot-interface's MuJoCo backend recovers the directory from when it
-    compiles gafro's copy of the model.
+    `meshdir` is the directory the packages are installed in (site-packages: three up from `models/generated/`), and each mesh is named
+    below it by its package (`opendubs_assets/models/opendubs/meshes/...`, `openarm_assets/models/openarm/meshes/...`). So an install of
+    both packages finds the arms' meshes in openarm_assets with nothing copied, and a name without `..` is what gafro-robot-interface's
+    MuJoCo backend recovers the directory from when it compiles gafro's copy of the model. A source checkout has the packages apart:
+    `opendubs_assets.get_generated_model_path` lays them side by side there.
 
     gafro's MJCF parser does not read `<frame>`, so a body inside one is not part of its model. The attach frame carries only a
     position and the arms' root sits at its origin, so the root body takes the frame's position and the frame goes.
     """
     root = ET.fromstring(openarm_xml(spec))
-    root.find("compiler").set("meshdir", os.path.relpath(MODELS_DIR, GENERATED_DIR))
+    root.find("compiler").set("meshdir", os.path.relpath(PACKAGE_DIR.parent, GENERATED_DIR))
     for mesh in root.iter("mesh"):
         if mesh.get("file"):
-            mesh.set("file", os.path.relpath(mesh.get("file"), MODELS_DIR))
+            mesh.set("file", _by_package(Path(mesh.get("file"))))
     for parent in root.iter():
         for frame in list(parent):
             body = frame.find("body") if frame.tag == "frame" else None
@@ -116,11 +124,21 @@ def to_xml(spec: mujoco.MjSpec) -> str:
     return ET.tostring(root, encoding="unicode") + "\n"
 
 
+def _by_package(path: Path) -> str:
+    """A mesh's file named below the packages' directory: `<package>/<path inside it>`."""
+    for package in (PACKAGE_DIR, OPENARM_PACKAGE_DIR):
+        if path.is_relative_to(package):
+            return f"{package.name}/{path.relative_to(package).as_posix()}"
+    raise ValueError(f"mesh {path} is in neither opendubs_assets nor openarm_assets")
+
+
 def main() -> None:
     argparse.ArgumentParser(description=__doc__.split("\n\n")[0]).parse_args()
     GENERATED_DIR.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(to_xml(build_opendubs()))
-    model = mujoco.MjModel.from_xml_path(str(OUT_PATH))
+    from opendubs_assets import get_generated_model_path  # where the meshes resolve, installed or in a checkout
+
+    model = mujoco.MjModel.from_xml_path(str(get_generated_model_path()))
     print(f"Wrote {OUT_PATH}: {model.nq} qpos, {model.nu} actuators")
 
 
