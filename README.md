@@ -7,7 +7,6 @@ The OpenDubs robot: its description (the chassis, the Z-axis lift and the pan/ti
 | Path | What |
 |---|---|
 | `models/opendubs/` | The robot description: `opendubs.xml` (MJCF), its meshes, `dimensions.yaml` (where every number came from), `gen_urdf.py` and the URDFs it writes, `variants.py`. Moved, unchanged, from the OpenDubs repository (`PROVENANCE.json`). |
-| `models/openarm/meshes/` | The arms' meshes, as OpenDubs vendored them (collision unchanged, visual decimated; `PROVENANCE.json`, `MOVED.json`). |
 | `models/generated/opendubs.xml` | The whole robot, the model the robot runs on and the one simulated: the arms, and each hand a control group of its finger joints. |
 | `configs/node.yaml`, `configs/node_hands.yaml` | [gafro-robot-node](https://github.com/personalrobotics/gafro-robot-node) configs of the whole robot: openarm_assets' arm configs with this model. A robot's config extends them as `opendubs_assets:configs/node.yaml`. |
 
@@ -19,6 +18,7 @@ The OpenDubs robot: its description (the chassis, the Z-axis lift and the pan/ti
 - They attach to the lift platform, so **each arm's kinematic chain starts at the lift** (`zaxis`): gafro's forward kinematics, reach and self-collision see the real height. The lift is in each arm's task space but not controlled; no control group commands the lift or the head yet, so on hardware only the arms' and the hands' drivers are needed (openarm-driver's `openarm` and `openarm_hand`). On hardware nothing reports the lift's height to gafro yet, so it reads 0 until a driver does.
 - gafro's model has a fixed root, so **the chassis is welded**: its freejoint, the wheels' and rollers' joints and the drive are left out. The wheels stay as geometry.
 - The element names are openarm_assets' (`openarm_right_joint1`, `right_arm`, `bimanual`, ...), so its node configs apply unchanged.
+- **The arms' meshes are openarm_assets' own**; nothing is copied. The model names every mesh below the directory the two packages are installed in (`opendubs_assets/models/opendubs/meshes/...`, `openarm_assets/models/openarm/meshes/...`), so an install of both finds them. In a source checkout or an editable install the packages are apart: `get_generated_model_path()` lays them side by side with two symlinks in `~/.cache/opendubs_assets/site` and returns the model's path there. Load the model through it rather than by its path in the checkout.
 
 ```python
 import gafro, mujoco
@@ -43,4 +43,3 @@ The generated models must be what the generator builds; the chassis welded and t
 
 - The OpenDubs description (`models/opendubs/`: CAD meshes, `opendubs.xml`, `dimensions.yaml`): CERN-OHL-W-2.0, copyright The OpenDubs Authors (`LICENSE-HARDWARE`).
 - Code, the moved generators included: Apache-2.0 (`LICENSE-CODE`).
-- The OpenArm meshes: Apache-2.0 (the models, `models/openarm/LICENSE-openarm-models`) and MIT (the packaging, `models/openarm/LICENSE-openarm_assets`).
