@@ -14,9 +14,11 @@ testing = pytest.importorskip("gafro_robot_node.testing", reason="gafro_robot_no
 pytest.importorskip("gafro.control")
 openarm_assets = pytest.importorskip("openarm_assets")
 
+import opendubs_assets
 from opendubs_assets import get_generated_model_path
 
-CONFIGS = pathlib.Path(__file__).resolve().parents[1] / "src" / "opendubs_assets" / "configs"
+# The package's configs, where they are installed (or src/ in a checkout): a release check tests the files that shipped.
+CONFIGS = pathlib.Path(opendubs_assets.__file__).parent / "configs"
 STEP = np.array([0.3, 0.2, -0.2, 0.3, 0.2, 0.2, 0.3])
 ARM_TOLERANCE = 0.025  # the position controller's lead, as in openarm_assets' scenarios
 
